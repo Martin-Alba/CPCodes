@@ -20,6 +20,9 @@
 # production
 /build
 
+# datos crudos de CP (geojson del CNIG) — no versionar
+/data/
+
 # misc
 .DS_Store
 *.pem

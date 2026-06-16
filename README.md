@@ -122,6 +122,22 @@ scripts/
   etl-codigos-postales.ts   # carga de geometrías de CP (Fase 1)
 ```
 
+## Datos de códigos postales (Fase 1)
+
+La geometría de los CP viene de datos abiertos del CNIG (repo
+[`inigoflores/ds-codigos-postales`](https://github.com/inigoflores/ds-codigos-postales)).
+
+1. Descarga la carpeta `/data` de ese repo y deja los `.geojson` (uno por provincia)
+   en `data/cp-geojson/` (esta carpeta está en `.gitignore`).
+2. Con la base de datos ya creada (`pnpm db:push`), ejecuta:
+
+   ```bash
+   pnpm etl:cp            # o: pnpm etl:cp ruta/a/los/geojson
+   ```
+
+   El script detecta el código postal de cada feature, calcula el centroide y hace
+   upsert en `postal_codes`. Es idempotente: puedes volver a ejecutarlo.
+
 ## Qué viene en la Fase 1
 
 - ETL de geometrías de CP (fuente CNIG) y API que sirve el polígono por CP.
