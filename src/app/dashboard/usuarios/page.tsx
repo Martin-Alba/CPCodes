@@ -5,7 +5,7 @@ import { getSession } from "@/lib/session";
 import ConfirmSubmit from "@/components/ConfirmSubmit";
 import { createUser, deleteUser, resetPassword, setActive } from "./actions";
 
-type UserRow = { id: string; email: string; name: string | null; active: boolean };
+type UserRow = { id: string; username: string | null; active: boolean };
 
 const inputCls =
   "rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900";
@@ -32,9 +32,9 @@ export default async function UsuariosPage({
   try {
     const db = getDb();
     list = await db
-      .select({ id: users.id, email: users.email, name: users.name, active: users.active })
+      .select({ id: users.id, username: users.username, active: users.active })
       .from(users)
-      .orderBy(asc(users.email));
+      .orderBy(asc(users.username));
   } catch {
     dbError = true;
   }
@@ -43,7 +43,7 @@ export default async function UsuariosPage({
     <section>
       <h1 className="text-xl font-semibold">Usuarios</h1>
       <p className="mt-1 text-sm text-neutral-500">
-        Usuarios de solo lectura: ven todo pero no modifican nada. Entran con su email y contraseña.
+        Usuarios de solo lectura: ven todo pero no modifican nada. Entran con su usuario y contraseña.
       </p>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -54,12 +54,15 @@ export default async function UsuariosPage({
         className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4"
       >
         <label className="block">
-          <span className="text-xs font-medium text-neutral-600">Email *</span>
-          <input name="email" type="email" required className={`${inputCls} mt-1 block w-56`} />
-        </label>
-        <label className="block">
-          <span className="text-xs font-medium text-neutral-600">Nombre</span>
-          <input name="name" maxLength={120} className={`${inputCls} mt-1 block w-40`} />
+          <span className="text-xs font-medium text-neutral-600">Usuario *</span>
+          <input
+            name="username"
+            required
+            minLength={3}
+            maxLength={80}
+            autoComplete="off"
+            className={`${inputCls} mt-1 block w-56`}
+          />
         </label>
         <label className="block">
           <span className="text-xs font-medium text-neutral-600">Contraseña *</span>
@@ -84,8 +87,7 @@ export default async function UsuariosPage({
           {list.map((u) => (
             <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
               <div className="text-sm">
-                <span className="font-medium">{u.email}</span>
-                {u.name ? <span className="text-neutral-500"> · {u.name}</span> : null}
+                <span className="font-medium">{u.username ?? "(sin usuario)"}</span>
                 <span
                   className={`ml-2 rounded px-1.5 py-0.5 text-xs ${
                     u.active ? "bg-green-100 text-green-700" : "bg-neutral-100 text-neutral-500"
@@ -124,7 +126,7 @@ export default async function UsuariosPage({
                 <form action={deleteUser}>
                   <input type="hidden" name="id" value={u.id} />
                   <ConfirmSubmit
-                    message={`¿Eliminar al usuario ${u.email}?`}
+                    message={`¿Eliminar al usuario ${u.username ?? ""}?`}
                     className="rounded-lg border border-red-300 px-3 py-1.5 text-xs text-red-600 transition hover:bg-red-50"
                   >
                     Eliminar

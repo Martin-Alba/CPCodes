@@ -17,7 +17,7 @@ async function assertAdmin(): Promise<void> {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME = /^[a-z0-9._-]+$/;
 const PATH = "/dashboard/usuarios";
 
 function str(v: FormDataEntryValue | null): string {
@@ -29,16 +29,19 @@ function errorTo(msg: string): never {
 }
 
 const createSchema = z.object({
-  email: z.string().trim().max(255).refine((v) => EMAIL.test(v), "Email inválido"),
-  name: z.string().trim().max(120).transform((v) => v || null),
+  username: z
+    .string()
+    .trim()
+    .min(3, "El usuario debe tener al menos 3 caracteres")
+    .max(80)
+    .refine((v) => USERNAME.test(v), "Solo minúsculas, números y . _ -"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(200),
 });
 
 export async function createUser(formData: FormData): Promise<void> {
   await assertAdmin();
   const parsed = createSchema.safeParse({
-    email: str(formData.get("email")).toLowerCase(),
-    name: str(formData.get("name")),
+    username: str(formData.get("username")).toLowerCase(),
     password: str(formData.get("password")),
   });
   if (!parsed.success) errorTo(parsed.error.issues[0]?.message ?? "Datos inválidos");
@@ -47,13 +50,12 @@ export async function createUser(formData: FormData): Promise<void> {
   try {
     const db = getDb();
     await db.insert(users).values({
-      email: parsed.data.email,
-      name: parsed.data.name,
+      username: parsed.data.username,
       passwordHash,
       role: "viewer",
     });
   } catch {
-    errorTo("No se pudo crear (¿el email ya existe?)");
+    errorTo("No se pudo crear (¿ese usuario ya existe?)");
   }
   revalidatePath(PATH);
   redirect(PATH);

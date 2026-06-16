@@ -19,7 +19,9 @@ import {
  */
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
+  username: varchar("username", { length: 80 }).unique(),
+  // email y name quedan opcionales (reservados para el futuro; no se piden en la UI)
+  email: varchar("email", { length: 255 }).unique(),
   passwordHash: text("password_hash").notNull(),
   name: varchar("name", { length: 120 }),
   role: varchar("role", { length: 20 }).notNull().default("viewer"),

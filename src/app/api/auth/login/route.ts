@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const found = await db
       .select()
       .from(users)
-      .where(eq(users.email, username.toLowerCase()))
+      .where(eq(users.username, username.toLowerCase()))
       .limit(1);
     const user = found[0];
     if (user && user.active) {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       if (ok) {
         await createSession({
           sub: user.id,
-          name: user.name ?? user.email,
+          name: user.username ?? user.email ?? "usuario",
           role: "viewer",
         });
         return NextResponse.json({ ok: true, role: "viewer" });
