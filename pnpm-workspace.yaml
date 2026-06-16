@@ -1,0 +1,8 @@
+# Configuración de pnpm (pnpm 11+).
+# `allowBuilds` autoriza explícitamente los scripts de instalación de estas
+# dependencias nativas: sharp (imágenes), esbuild (drizzle-kit) y unrs-resolver (eslint).
+# Sin esto, `pnpm install` sale con código de error (ERR_PNPM_IGNORED_BUILDS).
+allowBuilds:
+  sharp: true
+  esbuild: true
+  unrs-resolver: true
