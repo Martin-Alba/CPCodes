@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
-// Botón que abre una modal de confirmación (en vez del confirm() del navegador)
-// y, al confirmar, envía el formulario padre (Server Action).
+// Botón que abre una modal de confirmación y, al confirmar, envía el
+// formulario padre (Server Action).
 export default function ConfirmSubmit({
   children,
   message,
@@ -22,15 +23,6 @@ export default function ConfirmSubmit({
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !submitting) setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, submitting]);
 
   function onConfirm() {
     const form = btnRef.current?.closest("form");
@@ -51,40 +43,16 @@ export default function ConfirmSubmit({
         {submitting ? pendingText : children}
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[2000] grid place-items-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => !submitting && setOpen(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-xl border border-border bg-surface p-5 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-base font-semibold">{title}</h3>
-            <p className="mt-2 text-sm text-muted">{message}</p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                disabled={submitting}
-                className="rounded-lg border border-border px-3 py-1.5 text-sm transition hover:bg-elevated disabled:opacity-60"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={onConfirm}
-                disabled={submitting}
-                className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-60"
-              >
-                {submitting ? pendingText : confirmText}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={open}
+        title={title}
+        message={message}
+        confirmText={confirmText}
+        onConfirm={onConfirm}
+        onCancel={() => setOpen(false)}
+        busy={submitting}
+        danger
+      />
     </>
   );
 }

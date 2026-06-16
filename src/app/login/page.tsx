@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Brand from "@/components/Brand";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,7 +41,9 @@ export default function LoginPage() {
         onSubmit={onSubmit}
         className="w-full max-w-sm rounded-xl border border-border bg-surface p-8 shadow-sm"
       >
-        <h1 className="text-lg font-semibold">CPCodes</h1>
+        <h1 className="text-lg">
+          <Brand />
+        </h1>
         <p className="mt-1 text-sm text-muted">Inicia sesión para continuar</p>
 
         <div className="mt-6 space-y-4">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
+import Brand from "@/components/Brand";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -22,8 +23,8 @@ export default async function DashboardLayout({
         <div className="mx-auto max-w-6xl px-4">
           {/* Fila superior: marca + controles */}
           <div className="flex h-14 items-center justify-between gap-3">
-            <Link href="/dashboard" className="text-base font-semibold">
-              CPCodes
+            <Link href="/dashboard" className="text-base">
+              <Brand />
             </Link>
             <div className="flex items-center gap-2">
               <span className="hidden text-sm text-muted sm:inline">{session.name}</span>
