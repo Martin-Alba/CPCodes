@@ -24,6 +24,7 @@ export default function CodigoPostalExplorer() {
     e.preventDefault();
     setError(null);
     setResults([]);
+    setSelected(null);
     const term = q.trim();
     if (term.length < 2) {
       setError("Escribe al menos 2 caracteres (un CP o una provincia).");
@@ -87,7 +88,11 @@ export default function CodigoPostalExplorer() {
                 }`}
               >
                 {r.code}
-                {r.provincia ? ` · ${r.provincia}` : ""}
+                {r.municipio
+                  ? ` · ${r.municipio}`
+                  : r.provincia
+                    ? ` · ${r.provincia}`
+                    : ""}
               </button>
             </li>
           ))}
