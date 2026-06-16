@@ -3,7 +3,19 @@
 **Proyecto:** CPCodes
 **Fecha:** 15/06/2026
 **Autor:** Martin (Product owner) · Asistencia de ingeniería senior
-**Estado:** Borrador para aprobación — *aún no se ha escrito código*
+**Estado:** Fase 0 y Fase 1 **completadas y desplegadas en Vercel** (16/06/2026). Este documento conserva el plan original; ver "Estado actual" justo abajo para lo realmente construido.
+
+---
+
+## Estado actual (16/06/2026) — construido y desplegado
+
+Fases 0 y 1 completas, en producción en Vercel. Resumen de lo construido y de las **desviaciones respecto al plan original** (que se conserva más abajo como referencia):
+
+- **Stack real:** Next.js **16** (no 15) + React 19 + TS · Tailwind v4 · Neon + Drizzle · **Leaflet + OSM** (abstracción `MapView`) · pnpm 11 · Vercel.
+- **Auth (cambió respecto al plan):** NO se usó Auth.js (su v5 seguía en beta). Se implementó una **sesión propia ligera**: JWT con `jose` en cookie httpOnly + `bcryptjs`. Login con **super-admin fijo** por entorno (`ADMIN_USERNAME` + `ADMIN_PASSWORD`, hoy en **texto plano** — pendiente restaurar hash) y **usuarios de solo lectura** en DB (por **nombre de usuario**). `proxy.ts` protege `/dashboard` (Next 16 renombró `middleware`).
+- **Datos:** geometrías de CP del **CNIG** + nombres de municipio del **INE** (codeforspain). ~10.900 CP y ~8.100 municipios cargados. *No* se aplicó simplificación de polígonos (caben holgados; queda como optimización futura).
+- **Funciones (Fase 1):** búsqueda de CP por **CP / municipio / provincia** (mapa con polígono + listado paginado bidireccional), **repartidores** (CRUD + asignación N:M de CP) y **usuarios** de solo lectura. Mutaciones con **Server Actions** (admin-only, fail-closed, idempotentes).
+- **Pendientes:** restaurar hash del admin (§7) · rutas diarias (Fase 2) · rotar credenciales expuestas.
 
 ---
 
@@ -173,13 +185,13 @@ scripts/
 
 ## 10. Roadmap por fases
 
-**Fase 0 — Cimientos**
-Scaffolding Next.js + TypeScript + Tailwind · conexión a Neon · esquema Drizzle + migraciones · Auth.js con super-admin fijo · layout minimalista y middleware de protección.
+**Fase 0 — Cimientos** ✅ *completada*
+Scaffolding Next.js 16 + TypeScript + Tailwind · conexión a Neon · esquema Drizzle + migraciones · auth propia con super-admin fijo · layout minimalista y `proxy.ts` de protección.
 
-**Fase 1 — MVP funcional (núcleo de tu petición)**
-CRUD de repartidores · buscador de CP · asignación repartidor↔CP · ETL e ingesta de polígonos · vista de mapa con la zona del CP (Leaflet) · tests y verificación en terminal y navegador antes de cada commit.
+**Fase 1 — MVP funcional (núcleo de tu petición)** ✅ *completada y desplegada*
+CRUD de repartidores · búsqueda de CP por CP/municipio/provincia · listado paginado · asignación repartidor↔CP · ETL de polígonos (CNIG) y nombres de municipio (INE) · mapa con la zona del CP (Leaflet) · gestión de usuarios de solo lectura.
 
-**Fase 2 — Rutas diarias**
+**Fase 2 — Rutas diarias** *(pendiente)*
 Modelo y UI de rutas/paradas ordenadas por CP y día · visualización de la ruta en mapa.
 
 **Fase 3 — Multiusuario y robustez**

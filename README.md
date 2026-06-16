@@ -2,83 +2,68 @@
 
 Plataforma interna para gestionar el **almacén y los repartidores** de una empresa de paquetería: códigos postales con su **zona en el mapa**, repartidores y los CP que cubren, y usuarios de acceso.
 
-> Estado: **Fase 0 (cimientos)** completada. Ver el roadmap en `PLAN-ARQUITECTURA.md`.
+> Estado: **Fase 0 y Fase 1 completadas y desplegado en Vercel.** Roadmap y decisiones en `PLAN-ARQUITECTURA.md`.
+
+## Funcionalidades
+
+- **Códigos postales:** búsqueda por **CP, municipio o provincia** (en ambos sentidos). Vista de **mapa** que dibuja el polígono real del CP, y vista de **listado** paginado (CP · municipio · provincia) que enlaza al mapa.
+- **Repartidores:** alta, edición y baja, y asignación N:M de los CP que cubre cada uno.
+- **Usuarios:** el super-admin crea/activa/elimina usuarios de **solo lectura** (entran con usuario + contraseña).
 
 ## Stack
 
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**
 - **Tailwind CSS v4** (diseño minimalista)
 - **Neon** (PostgreSQL serverless) + **Drizzle ORM**
-- **Auth propia ligera**: JWT firmado con `jose` en cookie httpOnly + `bcryptjs`
+- **Auth propia ligera**: JWT firmado con `jose` en cookie httpOnly; usuarios de DB con `bcryptjs`
 - **Leaflet + OpenStreetMap** (mapa, tras la abstracción `MapView`)
-- Gestor de paquetes: **pnpm** · Deploy en **Vercel**
+- Gestor de paquetes: **pnpm 11** · Deploy en **Vercel**
 
-Roles: un **super-admin fijo** (gestiona todo y crea usuarios) y **usuarios de solo lectura**.
+Roles: un **super-admin fijo** (variables de entorno) que gestiona todo, y **usuarios de solo lectura** (en DB). Los permisos se validan **en el servidor**.
 
 ## Requisitos
 
 - **Node.js 24 LTS** (mínimo 20)
-- **pnpm 11** — actívalo con Corepack (incluido en Node):
-
-  ```bash
-  corepack enable pnpm
-  ```
-
+- **pnpm 11** — actívalo con Corepack: `corepack enable pnpm`
 - Una base de datos **Neon** (gratis) y, para desplegar, una cuenta **Vercel** (gratis)
 
 ## Puesta en marcha (local)
 
-### 1. Instalar dependencias
-
 ```bash
 pnpm install
-```
-
-### 2. Crear la base de datos en Neon
-
-1. Entra en https://neon.tech y crea un proyecto (región de Europa, p. ej. Frankfurt).
-2. Copia la **connection string** (formato `postgresql://...?sslmode=require`).
-
-### 3. Configurar variables de entorno
-
-Crea un archivo **`.env.local`** (copia de `.env.example`) y rellena:
-
-```bash
 cp .env.example .env.local
 ```
 
-- `DATABASE_URL` — la cadena de conexión de Neon.
-- `AUTH_SECRET` — genera uno con:
+Rellena `.env.local`:
 
-  ```bash
-  openssl rand -base64 32
-  ```
+- `DATABASE_URL` — connection string de Neon (`postgresql://...?sslmode=require`).
+- `AUTH_SECRET` — genera uno: `openssl rand -base64 32`
+- `ADMIN_USERNAME` — usuario del super-admin (p. ej. `admin`).
+- `ADMIN_PASSWORD` — su contraseña, en **texto plano** (de momento; **evita el carácter `$`**, que Next se come al cargar `.env`).
 
-- `ADMIN_USERNAME` — el usuario del super-admin (p. ej. `admin`).
-- `ADMIN_PASSWORD_HASH` — el hash de su contraseña. Genéralo con:
-
-  ```bash
-  pnpm hash "TuContraseñaSegura"
-  ```
-
-  Copia la línea `ADMIN_PASSWORD_HASH="..."` que imprime.
-
-### 4. Crear las tablas
+Crea las tablas y arranca:
 
 ```bash
-pnpm db:push
+pnpm db:push     # crea/actualiza el esquema en Neon
+pnpm dev         # http://localhost:3000  → login con el super-admin
 ```
 
-(usa Drizzle para crear el esquema en tu base de datos Neon)
+## Datos (códigos postales + municipios)
 
-### 5. Arrancar
+Origen: datos abiertos del **CNIG** (geometrías) y del **INE** (nombres de municipio).
 
 ```bash
-pnpm dev
+# 1) Geometrías de CP (CNIG) -> data/cp-geojson/*.geojson
+git clone --depth 1 https://github.com/inigoflores/ds-codigos-postales /tmp/cp-cnig
+mkdir -p data/cp-geojson && cp /tmp/cp-cnig/data/*.geojson data/cp-geojson/
+pnpm etl:cp
+
+# 2) Nombres de municipio (INE) -> rellena postal_codes.municipio por código INE
+git clone --depth 1 https://github.com/codeforspain/ds-organizacion-administrativa /tmp/oa
+pnpm etl:municipios /tmp/oa/data/municipios.csv
 ```
 
-Abre http://localhost:3000 → te redirige a `/login`. Entra con el usuario y la
-contraseña del super-admin.
+Ambos ETL son idempotentes. `data/` está en `.gitignore`.
 
 ## Comprobaciones de calidad
 
@@ -90,58 +75,39 @@ pnpm build       # build de producción
 
 ## Despliegue en Vercel
 
-1. Sube el repo a GitHub (incluyendo `pnpm-lock.yaml`).
-2. En https://vercel.com → **New Project** → importa el repo.
-3. Vercel detecta **pnpm** por el lockfile y usa la versión de `packageManager`.
-4. En **Settings → Environment Variables** añade las mismas variables que en
-   `.env.local` (`DATABASE_URL`, `AUTH_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`).
-5. Deploy. Vercel detecta Next.js automáticamente.
-
-> Las tablas se crean una sola vez con `pnpm db:push` apuntando a tu Neon
-> (puedes ejecutarlo en local con la `DATABASE_URL` de producción).
+1. Sube el repo a GitHub (incluyendo `pnpm-lock.yaml` y `pnpm-workspace.yaml`).
+2. En https://vercel.com → **New Project** → importa el repo (detecta pnpm por el lockfile).
+3. En **Settings → Environment Variables** (Production) añade: `AUTH_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`. La `DATABASE_URL` la aporta la integración de Neon/Vercel Postgres.
+4. Deploy. Las tablas se crean con `pnpm db:push` apuntando a esa misma DB (los ETL también).
 
 ## Estructura
 
 ```
 src/
   app/
-    login/                  # inicio de sesión
-    dashboard/              # zona protegida
-      codigos-postales/     # mapa (Fase 1: buscador + polígono del CP)
-      repartidores/         # Fase 1: CRUD + asignación de CP
-      usuarios/             # Fase 1: gestión de usuarios (solo admin)
-    api/auth/{login,logout} # endpoints de sesión
+    login/                          # inicio de sesión
+    dashboard/
+      codigos-postales/             # mapa + buscador (polígono del CP)
+        listado/                    # tabla paginada CP · municipio · provincia
+      repartidores/                 # CRUD + asignación de CP (server actions)
+      usuarios/                     # gestión de usuarios de solo lectura (admin)
+    api/
+      auth/{login,logout}/          # endpoints de sesión
+      postal-codes/[code]/          # geometría de un CP
+      postal-codes/search/          # búsqueda CP/municipio/provincia
   components/
-    map/                    # MapView (abstracción) + LeafletMap (implementación)
-    LogoutButton.tsx
-  db/                       # schema.ts (Drizzle) + index.ts (cliente Neon)
-  lib/                      # jwt.ts (edge) + session.ts (servidor)
-  proxy.ts                  # protege /dashboard (antes "middleware" en Next ≤ 15)
+    map/                            # MapView (abstracción) + LeafletMap (impl)
+    CodigoPostalExplorer.tsx · CpTabs.tsx · ConfirmSubmit.tsx · LogoutButton.tsx
+  db/                               # schema.ts (Drizzle) + index.ts (cliente Neon)
+  lib/                              # jwt.ts (edge) + session.ts (servidor)
+  proxy.ts                          # protege /dashboard (Next 16; antes "middleware")
 scripts/
-  hash-password.mjs         # genera el hash del admin
-  etl-codigos-postales.ts   # carga de geometrías de CP (Fase 1)
+  hash-password.mjs                 # genera un hash bcrypt (utilidad)
+  etl-codigos-postales.ts           # carga geometrías de CP (CNIG)
+  etl-municipios.ts                 # rellena nombres de municipio (INE)
 ```
 
-## Datos de códigos postales (Fase 1)
+## Notas
 
-La geometría de los CP viene de datos abiertos del CNIG (repo
-[`inigoflores/ds-codigos-postales`](https://github.com/inigoflores/ds-codigos-postales)).
-
-1. Descarga la carpeta `/data` de ese repo y deja los `.geojson` (uno por provincia)
-   en `data/cp-geojson/` (esta carpeta está en `.gitignore`).
-2. Con la base de datos ya creada (`pnpm db:push`), ejecuta:
-
-   ```bash
-   pnpm etl:cp            # o: pnpm etl:cp ruta/a/los/geojson
-   ```
-
-   El script detecta el código postal de cada feature, calcula el centroide y hace
-   upsert en `postal_codes`. Es idempotente: puedes volver a ejecutarlo.
-
-## Qué viene en la Fase 1
-
-- ETL de geometrías de CP (fuente CNIG) y API que sirve el polígono por CP.
-- CRUD de repartidores y asignación repartidor ↔ CP.
-- Gestión de usuarios de solo lectura desde el panel del admin.
-
-Detalle completo en `PLAN-ARQUITECTURA.md`.
+- **Seguridad (pendiente):** el super-admin usa contraseña en **texto plano** en el entorno (atajo temporal por el problema de los `$` en `.env`). Antes de "producción seria" se restaurará el hash (versión base64). Los usuarios de DB sí van hasheados.
+- **Fase 2 (pendiente):** rutas diarias de los repartidores — las tablas `routes`/`route_stops` están modeladas pero la función aún no está construida.
