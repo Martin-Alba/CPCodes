@@ -1,20 +1,20 @@
 /**
  * ETL de geometrías de códigos postales (Fase 1).
  *
- * Lee los GeoJSON del CNIG (repo inigoflores/ds-codigos-postales) desde un
- * directorio local y hace upsert en la tabla `postal_codes` (código, municipio,
- * provincia, código INE, centroide y geometría). El campo del CP se detecta de
- * forma defensiva (busca un valor de 5 dígitos), porque las propiedades del
- * dataset pueden variar.
+ * Lee GeoJSON del CNIG (repo inigoflores/ds-codigos-postales) y hace upsert en
+ * `postal_codes` (código, provincia, código INE, centroide y geometría). El CP se
+ * detecta de forma defensiva (valor de 5 dígitos). La provincia se deduce del
+ * nombre del archivo (el dataset no incluye nombres, solo COD_POSTAL y CODIGO_INE).
  *
- * Datos: descarga la carpeta /data del repo en `./data/cp-geojson` (ver README).
- * Ejecutar: `pnpm etl:cp [directorio]`   (por defecto ./data/cp-geojson)
+ * Datos: descarga la carpeta /data del repo en ./data/cp-geojson (ver README).
+ * Ejecutar todo:        pnpm etl:cp
+ * Ejecutar 1 provincia: pnpm etl:cp data/cp-geojson/ALAVA.geojson
  */
 import { config as loadEnv } from "dotenv";
 loadEnv({ path: ".env.local" });
 
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { basename, join } from "node:path";
 import { sql } from "drizzle-orm";
 import type {
   FeatureCollection,
@@ -25,11 +25,12 @@ import type {
 import { getDb } from "@/db";
 import { postalCodes } from "@/db/schema";
 
-const INPUT_DIR = process.argv[2] ?? "data/cp-geojson";
+const INPUT = process.argv[2] ?? "data/cp-geojson";
+const CHUNK = 100; // lote pequeño: los polígonos pueden ser grandes para el driver HTTP de Neon
 const CP_KEYS = ["COD_POSTAL", "CODPOS", "codigo_postal", "cod_postal", "CP", "cp", "postal_code"];
 const MUNI_KEYS = ["municipio", "MUNICIPIO", "nombre", "NOMBRE", "muni"];
 const PROV_KEYS = ["provincia", "PROVINCIA", "prov"];
-const INE_KEYS = ["ine", "INE", "cod_ine", "COD_INE", "municipio_id"];
+const INE_KEYS = ["CODIGO_INE", "cod_ine", "COD_INE", "ine", "INE", "municipio_id"];
 
 type Props = Record<string, unknown> | null | undefined;
 
@@ -94,14 +95,25 @@ function addPolygons(acc: Acc, geom: Geometry | null): void {
   }
 }
 
-async function main(): Promise<void> {
-  const entries = await readdir(INPUT_DIR).catch(() => {
-    console.error(`No se pudo leer ${INPUT_DIR}. Descarga los GeoJSON del CNIG (ver README, "Datos de códigos postales").`);
+function provinciaFromFile(path: string): string {
+  return basename(path).replace(/\.(geo)?json$/i, "").replace(/_/g, " ");
+}
+
+async function resolveFiles(input: string): Promise<string[]> {
+  const s = await stat(input).catch(() => null);
+  if (!s) {
+    console.error(`No existe "${input}". Descarga los GeoJSON del CNIG (ver README, "Datos de códigos postales").`);
     process.exit(1);
-  });
-  const files = entries.filter((f) => /\.(geo)?json$/i.test(f));
+  }
+  if (s.isFile()) return [input];
+  const entries = await readdir(input);
+  return entries.filter((f) => /\.(geo)?json$/i.test(f)).map((f) => join(input, f));
+}
+
+async function main(): Promise<void> {
+  const files = await resolveFiles(INPUT);
   if (files.length === 0) {
-    console.error(`No hay .geojson en ${INPUT_DIR}.`);
+    console.error(`No hay .geojson en "${INPUT}".`);
     process.exit(1);
   }
 
@@ -109,9 +121,9 @@ async function main(): Promise<void> {
   let features = 0;
   let skipped = 0;
 
-  for (const file of files) {
-    const raw = await readFile(join(INPUT_DIR, file), "utf8");
-    const fc = JSON.parse(raw) as FeatureCollection;
+  for (const path of files) {
+    const prov = provinciaFromFile(path);
+    const fc = JSON.parse(await readFile(path, "utf8")) as FeatureCollection;
     if (!Array.isArray(fc.features)) continue;
     for (const feat of fc.features) {
       const cp = findPostalCode(feat.properties);
@@ -126,7 +138,7 @@ async function main(): Promise<void> {
         byCp.set(cp, acc);
       }
       acc.municipio ??= pickString(feat.properties, MUNI_KEYS);
-      acc.provincia ??= pickString(feat.properties, PROV_KEYS);
+      acc.provincia ??= pickString(feat.properties, PROV_KEYS) ?? prov;
       acc.ine ??= pickString(feat.properties, INE_KEYS);
       addPolygons(acc, feat.geometry);
     }
@@ -144,15 +156,14 @@ async function main(): Promise<void> {
       geometry: { type: "MultiPolygon", coordinates: a.polygons } satisfies MultiPolygon,
     }));
 
-  console.log(`Ficheros: ${files.length} · features con CP: ${features} · sin CP: ${skipped} · CP únicos: ${rows.length}`);
+  console.log(`Archivos: ${files.length} · features con CP: ${features} · sin CP: ${skipped} · CP únicos: ${rows.length}`);
   if (rows.length === 0) {
     console.error("No se extrajo ningún CP. Revisa las propiedades del GeoJSON.");
     process.exit(1);
   }
-  console.log("Ejemplo:", { code: rows[0].code, municipio: rows[0].municipio, provincia: rows[0].provincia });
+  console.log("Ejemplo:", { code: rows[0].code, provincia: rows[0].provincia, ine: rows[0].ineMunicipio });
 
   const db = getDb();
-  const CHUNK = 500;
   let upserted = 0;
   for (let i = 0; i < rows.length; i += CHUNK) {
     const batch = rows.slice(i, i + CHUNK);
@@ -172,7 +183,7 @@ async function main(): Promise<void> {
         },
       });
     upserted += batch.length;
-    console.log(`  upsert ${upserted}/${rows.length}`);
+    if (upserted % 1000 < CHUNK) console.log(`  upsert ${upserted}/${rows.length}`);
   }
   console.log(`Hecho. ${upserted} códigos postales cargados/actualizados.`);
 }

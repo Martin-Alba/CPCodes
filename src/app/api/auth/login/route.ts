@@ -22,14 +22,18 @@ export async function POST(req: NextRequest) {
   const { username, password } = parsed.data;
 
   // 1) Super-administrador fijo (definido por variables de entorno)
+  // De momento SIN hash: comparación directa de la contraseña en texto plano.
+  // Nota seguridad: restaurar hash (versión base64, sin el problema de los `$`) antes de producción.
   const adminUser = process.env.ADMIN_USERNAME;
-  const adminHash = process.env.ADMIN_PASSWORD_HASH;
-  if (adminUser && adminHash && username === adminUser) {
-    const ok = await bcrypt.compare(password, adminHash);
-    if (ok) {
-      await createSession({ sub: "admin", name: adminUser, role: "admin" });
-      return NextResponse.json({ ok: true, role: "admin" });
-    }
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (
+    adminUser &&
+    adminPassword &&
+    username === adminUser &&
+    password === adminPassword
+  ) {
+    await createSession({ sub: "admin", name: adminUser, role: "admin" });
+    return NextResponse.json({ ok: true, role: "admin" });
   }
 
   // 2) Usuarios de solo lectura (almacenados en la base de datos)

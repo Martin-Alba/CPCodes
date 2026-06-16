@@ -1,7 +1,9 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import * as L from "leaflet";
 import type { GeoJsonObject } from "geojson";
 
 interface LeafletMapProps {
@@ -10,9 +12,28 @@ interface LeafletMapProps {
   zoom?: number;
 }
 
-// Capa de mapa concreta (proveedor: OpenStreetMap vía Leaflet).
-// Se importa siempre a través de MapView para mantener la abstracción y poder
-// cambiar de proveedor (Google/MapLibre) sin tocar el resto de la app.
+// Dibuja la geometría del CP de forma imperativa y encuadra el mapa a ella.
+// Se hace así (y no con <GeoJSON>) para que se actualice y reencuadre al cambiar de CP.
+function CpLayer({ geometry }: { geometry: GeoJsonObject | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!geometry) return;
+    const layer = L.geoJSON(geometry, {
+      style: { color: "#2563eb", weight: 2, fillColor: "#3b82f6", fillOpacity: 0.12 },
+    }).addTo(map);
+    const bounds = layer.getBounds();
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [20, 20] });
+    }
+    return () => {
+      map.removeLayer(layer);
+    };
+  }, [geometry, map]);
+  return null;
+}
+
+// Implementación concreta del mapa (proveedor: OpenStreetMap vía Leaflet).
+// Siempre se usa a través de MapView para mantener la abstracción.
 export default function LeafletMap({
   geometry = null,
   center = [40.4168, -3.7038], // Centro de España (Madrid)
@@ -24,12 +45,7 @@ export default function LeafletMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {geometry && (
-        <GeoJSON
-          data={geometry}
-          style={{ color: "#2563eb", weight: 2, fillColor: "#3b82f6", fillOpacity: 0.12 }}
-        />
-      )}
+      <CpLayer geometry={geometry} />
     </MapContainer>
   );
 }
