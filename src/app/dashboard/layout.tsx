@@ -15,12 +15,12 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen">
       <header className="border-b border-neutral-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
             <Link href="/dashboard" className="font-semibold">
               CPCodes
             </Link>
-            <nav className="flex items-center gap-4 text-sm text-neutral-600">
+            <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-600">
               <Link href="/dashboard/codigos-postales" className="hover:text-neutral-900">
                 Códigos postales
               </Link>

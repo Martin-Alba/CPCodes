@@ -3,6 +3,7 @@ import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import ConfirmSubmit from "@/components/ConfirmSubmit";
+import SubmitButton from "@/components/SubmitButton";
 import { createUser, deleteUser, resetPassword, setActive } from "./actions";
 
 type UserRow = { id: string; username: string | null; active: boolean };
@@ -68,12 +69,12 @@ export default async function UsuariosPage({
           <span className="text-xs font-medium text-neutral-600">Contraseña *</span>
           <input name="password" type="password" required minLength={6} className={`${inputCls} mt-1 block w-40`} />
         </label>
-        <button
-          type="submit"
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
+        <SubmitButton
+          pendingText="Creando…"
+          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
         >
           Crear
-        </button>
+        </SubmitButton>
       </form>
 
       {dbError ? (
@@ -100,12 +101,12 @@ export default async function UsuariosPage({
                 <form action={setActive}>
                   <input type="hidden" name="id" value={u.id} />
                   <input type="hidden" name="active" value={String(!u.active)} />
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs transition hover:bg-neutral-50"
+                  <SubmitButton
+                    pendingText="…"
+                    className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs transition hover:bg-neutral-50 disabled:opacity-60"
                   >
                     {u.active ? "Desactivar" : "Activar"}
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={resetPassword} className="flex items-center gap-1">
                   <input type="hidden" name="id" value={u.id} />
@@ -116,12 +117,12 @@ export default async function UsuariosPage({
                     minLength={6}
                     className={`${inputCls} w-40 px-2 py-1.5 text-xs`}
                   />
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs transition hover:bg-neutral-50"
+                  <SubmitButton
+                    pendingText="…"
+                    className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs transition hover:bg-neutral-50 disabled:opacity-60"
                   >
                     Reset
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={deleteUser}>
                   <input type="hidden" name="id" value={u.id} />

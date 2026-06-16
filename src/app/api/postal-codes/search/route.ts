@@ -42,7 +42,10 @@ export async function GET(req: Request) {
       .orderBy(asc(postalCodes.code))
       .limit(50);
 
-    return NextResponse.json({ results: rows });
+    return NextResponse.json(
+      { results: rows },
+      { headers: { "Cache-Control": "private, max-age=3600" } },
+    );
   } catch {
     return NextResponse.json({ error: "Error de servidor" }, { status: 500 });
   }

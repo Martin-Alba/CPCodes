@@ -98,8 +98,8 @@ export default async function ListadoPage({
             {totalPages > 1 ? ` · página ${page + 1} de ${totalPages}` : ""}
           </p>
 
-          <div className="mt-2 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-            <table className="w-full text-sm">
+          <div className="mt-2 overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+            <table className="w-full min-w-[520px] text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 text-left text-xs text-neutral-500">
                   <th className="px-4 py-2 font-medium">CP</th>

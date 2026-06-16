@@ -19,6 +19,7 @@ export default function CodigoPostalExplorer({ initialCode }: { initialCode?: st
   const [selected, setSelected] = useState<CpFull | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingGeo, setLoadingGeo] = useState(false);
 
   async function onSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -47,12 +48,15 @@ export default function CodigoPostalExplorer({ initialCode }: { initialCode?: st
 
   async function select(r: CpResult) {
     setError(null);
+    setLoadingGeo(true);
     try {
       const res = await fetch(`/api/postal-codes/${r.code}`);
       if (res.ok) setSelected((await res.json()) as CpFull);
       else setError("No se pudo cargar la geometría.");
     } catch {
       setError("Error de red. Inténtalo de nuevo.");
+    } finally {
+      setLoadingGeo(false);
     }
   }
 
@@ -116,7 +120,15 @@ export default function CodigoPostalExplorer({ initialCode }: { initialCode?: st
         </p>
       )}
 
-      <div className="mt-4 h-[60vh] overflow-hidden rounded-xl border border-neutral-200">
+      <div className="relative mt-4 h-[60vh] overflow-hidden rounded-xl border border-neutral-200">
+        {loadingGeo && (
+          <div className="absolute inset-0 z-[1000] grid place-items-center bg-white/60 text-sm text-neutral-500">
+            <span className="flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-700" />
+              Cargando zona…
+            </span>
+          </div>
+        )}
         <MapView geometry={selected?.geometry ?? null} />
       </div>
     </div>

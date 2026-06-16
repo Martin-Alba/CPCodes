@@ -3,6 +3,7 @@ import { asc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { drivers } from "@/db/schema";
 import { getSession } from "@/lib/session";
+import SubmitButton from "@/components/SubmitButton";
 import { createDriver } from "./actions";
 
 type Driver = typeof drivers.$inferSelect;
@@ -56,12 +57,12 @@ export default async function RepartidoresPage({
             <span className="text-xs font-medium text-neutral-600">Vehículo</span>
             <input name="vehiculo" maxLength={80} className={`${inputCls} w-36`} />
           </label>
-          <button
-            type="submit"
-            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
+          <SubmitButton
+            pendingText="Añadiendo…"
+            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
           >
             Añadir
-          </button>
+          </SubmitButton>
         </form>
       )}
 

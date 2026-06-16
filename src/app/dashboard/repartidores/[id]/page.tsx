@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import { drivers, driverPostalCodes, postalCodes } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import ConfirmSubmit from "@/components/ConfirmSubmit";
+import SubmitButton from "@/components/SubmitButton";
 import { assignCp, deleteDriver, unassignCp, updateDriver } from "../actions";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -71,12 +72,12 @@ export default async function DriverDetailPage({
               <span className="text-xs font-medium text-neutral-600">Vehículo</span>
               <input name="vehiculo" defaultValue={driver.vehiculo ?? ""} maxLength={80} className={`${inputCls} w-36`} />
             </label>
-            <button
-              type="submit"
-              className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
+            <SubmitButton
+              pendingText="Guardando…"
+              className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
             >
               Guardar
-            </button>
+            </SubmitButton>
           </form>
         ) : (
           <p className="mt-2 text-sm text-neutral-600">
@@ -101,12 +102,12 @@ export default async function DriverDetailPage({
               placeholder="Ej. 01193"
               className={`${inputCls} w-32`}
             />
-            <button
-              type="submit"
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium transition hover:bg-neutral-50"
+            <SubmitButton
+              pendingText="Asignando…"
+              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium transition hover:bg-neutral-50 disabled:opacity-60"
             >
               Asignar
-            </button>
+            </SubmitButton>
           </form>
         )}
 
