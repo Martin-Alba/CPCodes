@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { GeoJsonObject } from "geojson";
 import MapView from "@/components/map/MapView";
 
@@ -13,8 +13,8 @@ interface CpFull extends CpResult {
   geometry: GeoJsonObject | null;
 }
 
-export default function CodigoPostalExplorer() {
-  const [q, setQ] = useState("");
+export default function CodigoPostalExplorer({ initialCode }: { initialCode?: string }) {
+  const [q, setQ] = useState(initialCode ?? "");
   const [results, setResults] = useState<CpResult[]>([]);
   const [selected, setSelected] = useState<CpFull | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +55,14 @@ export default function CodigoPostalExplorer() {
       setError("Error de red. Inténtalo de nuevo.");
     }
   }
+
+  // Si llega un CP desde el listado (?cp=...), lo cargamos y dibujamos al entrar.
+  useEffect(() => {
+    if (initialCode && /^\d{5}$/.test(initialCode)) {
+      void select({ code: initialCode, municipio: null, provincia: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCode]);
 
   return (
     <div>
