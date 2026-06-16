@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "hash": "node scripts/hash-password.mjs",
-    "etl:cp": "tsx scripts/etl-codigos-postales.ts"
+    "etl:cp": "tsx scripts/etl-codigos-postales.ts",
+    "etl:municipios": "tsx scripts/etl-municipios.ts"
   },
   "dependencies": {
     "next": "16.2.9",
