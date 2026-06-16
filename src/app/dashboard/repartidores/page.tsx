@@ -9,7 +9,7 @@ import { createDriver } from "./actions";
 type Driver = typeof drivers.$inferSelect;
 
 const inputCls =
-  "mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900";
+  "mt-1 block rounded-lg border border-border bg-elevated px-3 py-2 text-sm outline-none focus:border-text";
 
 export default async function RepartidoresPage({
   searchParams,
@@ -32,34 +32,34 @@ export default async function RepartidoresPage({
   return (
     <section>
       <h1 className="text-xl font-semibold">Repartidores</h1>
-      <p className="mt-1 text-sm text-neutral-500">
+      <p className="mt-1 text-sm text-muted">
         {isAdmin
           ? "Gestiona repartidores y los CP que cubren."
           : "Listado de repartidores (solo lectura)."}
       </p>
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
 
       {isAdmin && (
         <form
           action={createDriver}
-          className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4"
+          className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-border bg-surface p-4"
         >
           <label className="block">
-            <span className="text-xs font-medium text-neutral-600">Nombre *</span>
+            <span className="text-xs font-medium text-muted">Nombre *</span>
             <input name="nombre" required maxLength={160} className={`${inputCls} w-48`} />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-neutral-600">Teléfono</span>
+            <span className="text-xs font-medium text-muted">Teléfono</span>
             <input name="telefono" maxLength={40} className={`${inputCls} w-36`} />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-neutral-600">Vehículo</span>
+            <span className="text-xs font-medium text-muted">Vehículo</span>
             <input name="vehiculo" maxLength={80} className={`${inputCls} w-36`} />
           </label>
           <SubmitButton
             pendingText="Añadiendo…"
-            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-60"
           >
             Añadir
           </SubmitButton>
@@ -67,23 +67,21 @@ export default async function RepartidoresPage({
       )}
 
       {dbError ? (
-        <p className="mt-6 text-sm text-red-600">
-          No se pudo cargar la lista (¿base de datos conectada?).
-        </p>
+        <p className="mt-6 text-sm text-red-500">No se pudo cargar la lista (¿base de datos conectada?).</p>
       ) : list.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-neutral-300 bg-white p-10 text-center text-sm text-neutral-400">
+        <div className="mt-6 rounded-xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted">
           Aún no hay repartidores.
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+        <ul className="mt-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
           {list.map((d) => (
             <li key={d.id}>
               <Link
                 href={`/dashboard/repartidores/${d.id}`}
-                className="flex items-center justify-between px-4 py-3 text-sm hover:bg-neutral-50"
+                className="flex items-center justify-between px-4 py-3 text-sm hover:bg-elevated"
               >
                 <span className="font-medium">{d.nombre}</span>
-                <span className="text-neutral-500">
+                <span className="text-muted">
                   {[d.telefono, d.vehiculo].filter(Boolean).join(" · ") || "—"}
                 </span>
               </Link>

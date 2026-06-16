@@ -13,10 +13,10 @@ function Card({
   return (
     <Link
       href={href}
-      className="block rounded-xl border border-neutral-200 bg-white p-5 transition hover:border-neutral-300 hover:shadow-sm"
+      className="block rounded-xl border border-border bg-surface p-5 transition hover:bg-elevated"
     >
       <h2 className="font-medium">{title}</h2>
-      <p className="mt-1 text-sm text-neutral-500">{desc}</p>
+      <p className="mt-1 text-sm text-muted">{desc}</p>
     </Link>
   );
 }
@@ -28,9 +28,7 @@ export default async function DashboardHome() {
   return (
     <section>
       <h1 className="text-xl font-semibold">Hola, {session?.name}</h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        Panel de gestión de almacén y repartidores.
-      </p>
+      <p className="mt-1 text-sm text-muted">Panel de gestión de almacén y repartidores.</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card

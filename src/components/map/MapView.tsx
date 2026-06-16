@@ -7,7 +7,7 @@ import type { GeoJsonObject } from "geojson";
 const LeafletMap = dynamic(() => import("./LeafletMap"), {
   ssr: false,
   loading: () => (
-    <div className="grid h-full w-full place-items-center text-sm text-neutral-500">
+    <div className="grid h-full w-full place-items-center text-sm text-muted">
       Cargando mapa…
     </div>
   ),

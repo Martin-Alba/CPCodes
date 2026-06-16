@@ -11,7 +11,7 @@ export default async function CodigosPostalesPage({
   return (
     <section>
       <h1 className="text-xl font-semibold">Códigos postales</h1>
-      <p className="mt-1 text-sm text-neutral-500">
+      <p className="mt-1 text-sm text-muted">
         Busca por CP, municipio o provincia para ver la zona dibujada en el mapa.
       </p>
 

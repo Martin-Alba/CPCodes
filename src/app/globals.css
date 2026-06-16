@@ -1,10 +1,53 @@
 @import "tailwindcss";
 
+/* Modo oscuro por clase (.dark en <html>) — Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tokens de color: un único sitio donde se define el tema. */
 :root {
+  --bg: #fafafa; /* fondo de página */
+  --surface: #ffffff; /* tarjetas y cabecera */
+  --elevated: #f4f4f5; /* inputs y hover suave */
+  --border: #e5e5e5;
+  --text: #18181b;
+  --muted: #6b7280;
+  --primary: #18181b; /* botón principal */
+  --primary-fg: #ffffff;
+  --accent: #2563eb; /* enlaces / acento */
   color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0b0c;
+  --surface: #161618;
+  --elevated: #202024;
+  --border: #2a2a2e;
+  --text: #ededed;
+  --muted: #9ca3af;
+  --primary: #ededed;
+  --primary-fg: #0b0b0c;
+  --accent: #60a5fa;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
 }
 
 html,
 body {
   height: 100%;
+}
+
+/* En modo oscuro, oscurece solo las teselas del mapa (el polígono va por encima). */
+.dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85);
 }

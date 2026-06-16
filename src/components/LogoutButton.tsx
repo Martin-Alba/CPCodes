@@ -22,7 +22,7 @@ export default function LogoutButton() {
     <button
       onClick={logout}
       disabled={loading}
-      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm transition hover:bg-neutral-50 disabled:opacity-50"
+      className="rounded-lg border border-border px-3 py-1.5 text-sm transition hover:bg-elevated disabled:opacity-50"
     >
       {loading ? "Saliendo…" : "Salir"}
     </button>

@@ -75,18 +75,18 @@ export default function CodigoPostalExplorer({ initialCode }: { initialCode?: st
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="CP o provincia (ej. 28013 o Madrid)"
-          className="w-72 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+          className="w-full max-w-xs rounded-lg border border-border bg-elevated px-3 py-2 text-sm outline-none focus:border-text"
         />
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "Buscando…" : "Buscar"}
         </button>
       </form>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
 
       {results.length > 1 && (
         <ul className="mt-3 flex max-h-32 flex-wrap gap-2 overflow-auto">
@@ -95,16 +95,12 @@ export default function CodigoPostalExplorer({ initialCode }: { initialCode?: st
               <button
                 type="button"
                 onClick={() => select(r)}
-                className={`rounded-full border px-3 py-1 text-xs transition hover:bg-neutral-50 ${
-                  selected?.code === r.code ? "border-neutral-900" : "border-neutral-200"
+                className={`rounded-full border px-3 py-1 text-xs transition hover:bg-elevated ${
+                  selected?.code === r.code ? "border-text" : "border-border"
                 }`}
               >
                 {r.code}
-                {r.municipio
-                  ? ` · ${r.municipio}`
-                  : r.provincia
-                    ? ` · ${r.provincia}`
-                    : ""}
+                {r.municipio ? ` · ${r.municipio}` : r.provincia ? ` · ${r.provincia}` : ""}
               </button>
             </li>
           ))}
@@ -112,19 +108,19 @@ export default function CodigoPostalExplorer({ initialCode }: { initialCode?: st
       )}
 
       {selected && (
-        <p className="mt-2 text-sm text-neutral-600">
-          <span className="font-medium">{selected.code}</span>
+        <p className="mt-2 text-sm text-muted">
+          <span className="font-medium text-text">{selected.code}</span>
           {selected.municipio ? ` · ${selected.municipio}` : ""}
           {selected.provincia ? ` (${selected.provincia})` : ""}
           {selected.geometry ? "" : " · (sin geometría)"}
         </p>
       )}
 
-      <div className="relative mt-4 h-[60vh] overflow-hidden rounded-xl border border-neutral-200">
+      <div className="relative mt-4 h-[60vh] overflow-hidden rounded-xl border border-border">
         {loadingGeo && (
-          <div className="absolute inset-0 z-[1000] grid place-items-center bg-white/60 text-sm text-neutral-500">
+          <div className="absolute inset-0 z-[1000] grid place-items-center bg-bg/70 text-sm text-muted">
             <span className="flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-700" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-text" />
               Cargando zona…
             </span>
           </div>

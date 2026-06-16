@@ -10,7 +10,7 @@ import { assignCp, deleteDriver, unassignCp, updateDriver } from "../actions";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const inputCls =
-  "mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900";
+  "mt-1 block rounded-lg border border-border bg-elevated px-3 py-2 text-sm outline-none focus:border-text";
 
 export default async function DriverDetailPage({
   params,
@@ -43,54 +43,47 @@ export default async function DriverDetailPage({
   return (
     <section className="space-y-6">
       <div>
-        <Link
-          href="/dashboard/repartidores"
-          className="text-sm text-neutral-500 hover:text-neutral-900"
-        >
+        <Link href="/dashboard/repartidores" className="text-sm text-muted hover:text-text">
           ← Repartidores
         </Link>
         <h1 className="mt-1 text-xl font-semibold">{driver.nombre}</h1>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
-      {/* Datos */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-4">
+      <div className="rounded-xl border border-border bg-surface p-4">
         <h2 className="text-sm font-medium">Datos</h2>
         {isAdmin ? (
           <form action={updateDriver} className="mt-3 flex flex-wrap items-end gap-3">
             <input type="hidden" name="id" value={driver.id} />
             <label className="block">
-              <span className="text-xs font-medium text-neutral-600">Nombre *</span>
+              <span className="text-xs font-medium text-muted">Nombre *</span>
               <input name="nombre" required defaultValue={driver.nombre} maxLength={160} className={`${inputCls} w-48`} />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-neutral-600">Teléfono</span>
+              <span className="text-xs font-medium text-muted">Teléfono</span>
               <input name="telefono" defaultValue={driver.telefono ?? ""} maxLength={40} className={`${inputCls} w-36`} />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-neutral-600">Vehículo</span>
+              <span className="text-xs font-medium text-muted">Vehículo</span>
               <input name="vehiculo" defaultValue={driver.vehiculo ?? ""} maxLength={80} className={`${inputCls} w-36`} />
             </label>
             <SubmitButton
               pendingText="Guardando…"
-              className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-60"
             >
               Guardar
             </SubmitButton>
           </form>
         ) : (
-          <p className="mt-2 text-sm text-neutral-600">
+          <p className="mt-2 text-sm text-muted">
             {[driver.telefono, driver.vehiculo].filter(Boolean).join(" · ") || "—"}
           </p>
         )}
       </div>
 
-      {/* CP asignados */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-medium">
-          Códigos postales que cubre ({cps.length})
-        </h2>
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <h2 className="text-sm font-medium">Códigos postales que cubre ({cps.length})</h2>
 
         {isAdmin && (
           <form action={assignCp} className="mt-3 flex items-end gap-2">
@@ -104,7 +97,7 @@ export default async function DriverDetailPage({
             />
             <SubmitButton
               pendingText="Asignando…"
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium transition hover:bg-neutral-50 disabled:opacity-60"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:bg-elevated disabled:opacity-60"
             >
               Asignar
             </SubmitButton>
@@ -112,25 +105,21 @@ export default async function DriverDetailPage({
         )}
 
         {cps.length === 0 ? (
-          <p className="mt-3 text-sm text-neutral-400">Sin CP asignados.</p>
+          <p className="mt-3 text-sm text-muted">Sin CP asignados.</p>
         ) : (
           <ul className="mt-3 flex flex-wrap gap-2">
             {cps.map((c) => (
               <li
                 key={c.code}
-                className="flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs"
+                className="flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 text-xs"
               >
                 <span className="font-medium">{c.code}</span>
-                {c.provincia && <span className="text-neutral-500">{c.provincia}</span>}
+                {c.provincia && <span className="text-muted">{c.provincia}</span>}
                 {isAdmin && (
                   <form action={unassignCp} className="ml-0.5 inline-flex">
                     <input type="hidden" name="driverId" value={driver.id} />
                     <input type="hidden" name="code" value={c.code} />
-                    <button
-                      type="submit"
-                      title="Quitar"
-                      className="leading-none text-neutral-400 transition hover:text-red-600"
-                    >
+                    <button type="submit" title="Quitar" className="leading-none text-muted transition hover:text-red-500">
                       ×
                     </button>
                   </form>
@@ -141,13 +130,12 @@ export default async function DriverDetailPage({
         )}
       </div>
 
-      {/* Eliminar */}
       {isAdmin && (
         <form action={deleteDriver}>
           <input type="hidden" name="id" value={driver.id} />
           <ConfirmSubmit
             message={`¿Eliminar a ${driver.nombre}? También se quitarán sus CP asignados.`}
-            className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 transition hover:bg-red-50"
+            className="rounded-lg border border-red-500/40 px-3 py-1.5 text-sm text-red-500 transition hover:bg-red-500/10"
           >
             Eliminar repartidor
           </ConfirmSubmit>

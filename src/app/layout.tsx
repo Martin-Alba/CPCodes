@@ -6,14 +6,19 @@ export const metadata: Metadata = {
   description: "Plataforma interna para gestionar códigos postales y repartidores.",
 };
 
+// Fija el tema antes de pintar (sin parpadeo). Por defecto oscuro, salvo que el
+// usuario haya elegido claro explícitamente.
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
-      <body className="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
-        {children}
-      </body>
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-screen bg-bg text-text antialiased">{children}</body>
     </html>
   );
 }
