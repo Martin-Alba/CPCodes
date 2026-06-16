@@ -4,6 +4,9 @@ import { getSession } from "@/lib/session";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
 
+const navLinkCls =
+  "whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm text-muted transition hover:bg-elevated hover:text-text";
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -16,33 +19,35 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen">
       <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-            <Link href="/dashboard" className="font-semibold">
+        <div className="mx-auto max-w-6xl px-4">
+          {/* Fila superior: marca + controles */}
+          <div className="flex h-14 items-center justify-between gap-3">
+            <Link href="/dashboard" className="text-base font-semibold">
               CPCodes
             </Link>
-            <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-              <Link href="/dashboard/codigos-postales" className="hover:text-text">
-                Códigos postales
-              </Link>
-              <Link href="/dashboard/repartidores" className="hover:text-text">
-                Repartidores
-              </Link>
-              {isAdmin && (
-                <Link href="/dashboard/usuarios" className="hover:text-text">
-                  Usuarios
-                </Link>
-              )}
-            </nav>
+            <div className="flex items-center gap-2">
+              <span className="hidden text-sm text-muted sm:inline">{session.name}</span>
+              <span className="rounded-md bg-elevated px-2 py-0.5 text-xs text-muted">
+                {isAdmin ? "admin" : "lectura"}
+              </span>
+              <ThemeToggle />
+              <LogoutButton />
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="hidden text-muted sm:inline">{session.name}</span>
-            <span className="rounded bg-elevated px-1.5 py-0.5 text-xs text-muted">
-              {isAdmin ? "admin" : "lectura"}
-            </span>
-            <ThemeToggle />
-            <LogoutButton />
-          </div>
+          {/* Fila inferior: navegación (se desplaza en horizontal si no cabe) */}
+          <nav className="flex gap-1 overflow-x-auto pb-2">
+            <Link href="/dashboard/codigos-postales" className={navLinkCls}>
+              Códigos postales
+            </Link>
+            <Link href="/dashboard/repartidores" className={navLinkCls}>
+              Repartidores
+            </Link>
+            {isAdmin && (
+              <Link href="/dashboard/usuarios" className={navLinkCls}>
+                Usuarios
+              </Link>
+            )}
+          </nav>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
