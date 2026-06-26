@@ -42,18 +42,23 @@ export async function GET(
     const codes = rows.map((r) => r.code);
     const locByCp = new Map<string, string[]>();
     if (codes.length > 0) {
-      const locs = await db
-        .select({
-          postalCode: postalCodeLocalities.postalCode,
-          name: postalCodeLocalities.name,
-        })
-        .from(postalCodeLocalities)
-        .where(inArray(postalCodeLocalities.postalCode, codes))
-        .orderBy(asc(postalCodeLocalities.name));
-      for (const l of locs) {
-        const arr = locByCp.get(l.postalCode);
-        if (arr) arr.push(l.name);
-        else locByCp.set(l.postalCode, [l.name]);
+      try {
+        const locs = await db
+          .select({
+            postalCode: postalCodeLocalities.postalCode,
+            name: postalCodeLocalities.name,
+          })
+          .from(postalCodeLocalities)
+          .where(inArray(postalCodeLocalities.postalCode, codes))
+          .orderBy(asc(postalCodeLocalities.name));
+        for (const l of locs) {
+          const arr = locByCp.get(l.postalCode);
+          if (arr) arr.push(l.name);
+          else locByCp.set(l.postalCode, [l.name]);
+        }
+      } catch {
+        // La tabla de localidades puede no existir aún (sin db:push):
+        // seguimos sin ellas; el mapa y el municipio funcionan igual.
       }
     }
 
