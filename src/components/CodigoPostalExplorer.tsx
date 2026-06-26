@@ -65,7 +65,6 @@ export default function CodigoPostalExplorer({ initialCode }: { initialCode?: st
     if (initialCode && /^\d{5}$/.test(initialCode)) {
       void select({ code: initialCode, municipio: null, provincia: null });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCode]);
 
   return (

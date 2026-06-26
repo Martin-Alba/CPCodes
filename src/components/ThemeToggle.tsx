@@ -8,6 +8,10 @@ export default function ThemeToggle() {
   const [dark, setDark] = useState(true);
 
   useEffect(() => {
+    // Sincroniza el icono con la clase real (.dark) que fija el script del
+    // <head> antes de hidratar. Hacerlo en el efecto (y no en el render) evita
+    // un desajuste de hidratación; este setState inicial es intencionado.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDark(document.documentElement.classList.contains("dark"));
   }, []);
 

@@ -23,7 +23,11 @@ function CpLayer({ geometry }: { geometry: GeoJsonObject | null }) {
     }).addTo(map);
     const bounds = layer.getBounds();
     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [20, 20] });
+      // animate:false a propósito: si el mapa se desmonta justo después de
+      // encuadrar (p. ej. al quitar la última zona del repartidor), una
+      // animación de zoom viva ejecuta su callback sobre un mapa ya destruido
+      // y rompe con "Cannot read properties of undefined (reading '_leaflet_pos')".
+      map.fitBounds(bounds, { padding: [20, 20], animate: false });
     }
     return () => {
       map.removeLayer(layer);

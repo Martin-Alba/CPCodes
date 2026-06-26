@@ -12,6 +12,19 @@ interface CoverageCp {
   localities: string[];
 }
 
+// Pone en mayúscula inicial cada palabra (respeta espacios, guiones y barras):
+// "VIELLA-SIERO" → "Viella-Siero".
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/(^|[\s\-/])([a-zà-ÿñ])/g, (_, sep, ch) => sep + ch.toUpperCase());
+}
+
+// Las localidades vienen en mayúsculas con el concejo/parroquia entre paréntesis
+// ("BALBONA (SIERO)"). Dejamos el nombre tal cual y ponemos el paréntesis en
+// formato Título: "BALBONA (Siero)", "ESTACION (VIELLA-SIERO)" → "(Viella-Siero)".
+function formatLocality(raw: string): string {
+  return raw.replace(/\(([^)]+)\)/g, (_, inner: string) => `(${titleCase(inner)})`);
+}
+
 // Zona de cobertura de un repartidor: mapa con todas las zonas de sus CP +
 // las localidades que comprende cada CP (con el municipio como respaldo).
 export default function DriverCoverageMap({
@@ -25,14 +38,16 @@ export default function DriverCoverageMap({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (count === 0) {
-      setCps([]);
-      return;
-    }
+    // Sin zonas no hay nada que cargar y el componente no se renderiza.
+    if (count === 0) return;
     let alive = true;
-    setCps(null);
-    setError(null);
+    // No vaciamos cps en cada refetch: mantenemos el mapa montado mientras
+    // llega la nueva cobertura. Evita desmontar/re-montar Leaflet en cada
+    // cambio (mejor en equipos de bajos recursos) y la race del unmount con
+    // la animación del mapa. El único desmontaje queda en count===0.
+    // Los setState van dentro del async (no síncronos en el efecto).
     (async () => {
+      setError(null);
       try {
         const res = await fetch(`/api/drivers/${driverId}/coverage`, { cache: "no-store" });
         if (!res.ok) throw new Error();
@@ -75,13 +90,39 @@ export default function DriverCoverageMap({
       {cps && cps.length > 0 && (
         <div className="mt-3">
           <p className="text-xs font-medium text-muted">Localidades por código postal</p>
-          <ul className="mt-1 max-h-72 space-y-2 overflow-auto pr-1 text-sm">
+          <ul className="mt-1 max-h-72 space-y-1 overflow-auto pr-1">
             {cps.map((cp) => (
               <li key={cp.code}>
-                <span className="font-medium">{cp.code}</span>
-                {cp.municipio && <span className="text-muted"> · {cp.municipio}</span>}
-                {cp.localities.length > 0 && (
-                  <div className="text-xs text-muted">{cp.localities.join(", ")}</div>
+                {cp.localities.length > 0 ? (
+                  <details className="group rounded-lg border border-border bg-elevated/40">
+                    <summary className="flex cursor-pointer list-none items-center gap-1.5 px-3 py-2 text-sm select-none [&::-webkit-details-marker]:hidden">
+                      <svg
+                        className="h-3 w-3 shrink-0 text-muted transition-transform group-open:rotate-90"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                      <span className="font-medium">{cp.code}</span>
+                      {cp.municipio && <span className="text-muted"> · {cp.municipio}</span>}
+                      <span className="ml-auto text-xs text-muted">{cp.localities.length}</span>
+                    </summary>
+                    <ul className="list-disc space-y-0.5 border-t border-border py-2 pr-3 pl-9 text-xs text-muted marker:text-muted/50">
+                      {cp.localities.map((loc) => (
+                        <li key={loc}>{formatLocality(loc)}</li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : (
+                  <div className="rounded-lg border border-border bg-elevated/40 px-3 py-2 text-sm">
+                    <span className="font-medium">{cp.code}</span>
+                    {cp.municipio && <span className="text-muted"> · {cp.municipio}</span>}
+                  </div>
                 )}
               </li>
             ))}
