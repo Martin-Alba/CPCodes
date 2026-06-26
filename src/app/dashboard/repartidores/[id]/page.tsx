@@ -6,6 +6,7 @@ import { drivers, driverPostalCodes, postalCodes } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import ConfirmSubmit from "@/components/ConfirmSubmit";
 import SubmitButton from "@/components/SubmitButton";
+import DriverCoverageMap from "@/components/DriverCoverageMap";
 import { assignCp, deleteDriver, unassignCp, updateDriver } from "../actions";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -129,6 +130,8 @@ export default async function DriverDetailPage({
           </ul>
         )}
       </div>
+
+      <DriverCoverageMap driverId={driver.id} count={cps.length} />
 
       {isAdmin && (
         <form action={deleteDriver}>
