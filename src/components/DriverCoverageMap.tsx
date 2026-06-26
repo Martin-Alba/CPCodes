@@ -38,6 +38,9 @@ export default function DriverCoverageMap({
   const [error, setError] = useState<string | null>(null);
   // CP enfocado en el mapa al pulsar una localidad (null = ver todas las zonas).
   const [focusCode, setFocusCode] = useState<string | null>(null);
+  // Se incrementa en cada pulsación para reencuadrar aunque el CP sea el mismo
+  // (p. ej. otra localidad del mismo CP después de mover el mapa a mano).
+  const [focusKey, setFocusKey] = useState(0);
   const mapWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,6 +83,7 @@ export default function DriverCoverageMap({
   // Enfoca el mapa en la zona del CP y lo trae a la vista (si está scrolleado).
   function focusCp(code: string) {
     setFocusCode(code);
+    setFocusKey((k) => k + 1);
     mapWrapRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
@@ -95,7 +99,7 @@ export default function DriverCoverageMap({
           ref={mapWrapRef}
           className="mt-3 h-[55vh] overflow-hidden rounded-lg border border-border"
         >
-          <MapView geometry={featureCollection} focusCode={focusCode} />
+          <MapView geometry={featureCollection} focusCode={focusCode} focusKey={focusKey} />
         </div>
       )}
 
@@ -106,7 +110,10 @@ export default function DriverCoverageMap({
             {focusCode && (
               <button
                 type="button"
-                onClick={() => setFocusCode(null)}
+                onClick={() => {
+                  setFocusCode(null);
+                  setFocusKey((k) => k + 1);
+                }}
                 className="text-xs text-muted underline-offset-2 transition hover:text-text hover:underline"
               >
                 Ver todo

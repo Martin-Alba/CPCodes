@@ -10,6 +10,9 @@ interface LeafletMapProps {
   geometry?: GeoJsonObject | null;
   // Código del CP a enfocar/resaltar (al pulsar una localidad). null = ver todo.
   focusCode?: string | null;
+  // Nonce que cambia en cada pulsación: fuerza el reencuadre aunque el CP sea
+  // el mismo (otra localidad del mismo CP tras mover el mapa).
+  focusKey?: number;
   center?: [number, number];
   zoom?: number;
 }
@@ -28,9 +31,11 @@ type CodedLayer = L.Path & { feature?: Feature };
 function CpLayer({
   geometry,
   focusCode,
+  focusKey,
 }: {
   geometry: GeoJsonObject | null;
   focusCode?: string | null;
+  focusKey?: number;
 }) {
   const map = useMap();
   const layerRef = useRef<L.GeoJSON | null>(null);
@@ -63,7 +68,8 @@ function CpLayer({
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: target ? [30, 30] : [20, 20], animate: false });
     }
-  }, [focusCode, geometry, map]);
+    // focusKey en deps: reencuadra en cada pulsación aunque el CP no cambie.
+  }, [focusCode, focusKey, geometry, map]);
 
   return null;
 }
@@ -73,6 +79,7 @@ function CpLayer({
 export default function LeafletMap({
   geometry = null,
   focusCode = null,
+  focusKey = 0,
   center = [40.4168, -3.7038], // Centro de España (Madrid)
   zoom = 6,
 }: LeafletMapProps) {
@@ -82,7 +89,7 @@ export default function LeafletMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <CpLayer geometry={geometry} focusCode={focusCode} />
+      <CpLayer geometry={geometry} focusCode={focusCode} focusKey={focusKey} />
     </MapContainer>
   );
 }

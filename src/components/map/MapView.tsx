@@ -16,6 +16,8 @@ const LeafletMap = dynamic(() => import("./LeafletMap"), {
 export interface MapViewProps {
   geometry?: GeoJsonObject | null;
   focusCode?: string | null;
+  // Cambia en cada pulsación para forzar el reencuadre (ver DriverCoverageMap).
+  focusKey?: number;
   center?: [number, number];
   zoom?: number;
 }
