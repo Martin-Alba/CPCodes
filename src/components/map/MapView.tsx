@@ -15,6 +15,7 @@ const LeafletMap = dynamic(() => import("./LeafletMap"), {
 
 export interface MapViewProps {
   geometry?: GeoJsonObject | null;
+  focusCode?: string | null;
   center?: [number, number];
   zoom?: number;
 }

@@ -1,38 +1,70 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import * as L from "leaflet";
-import type { GeoJsonObject } from "geojson";
+import type { Feature, GeoJsonObject } from "geojson";
 
 interface LeafletMapProps {
   geometry?: GeoJsonObject | null;
+  // Código del CP a enfocar/resaltar (al pulsar una localidad). null = ver todo.
+  focusCode?: string | null;
   center?: [number, number];
   zoom?: number;
 }
 
-// Dibuja la geometría del CP de forma imperativa y encuadra el mapa a ella.
-// Se hace así (y no con <GeoJSON>) para que se actualice y reencuadre al cambiar de CP.
-function CpLayer({ geometry }: { geometry: GeoJsonObject | null }) {
+const cpStyle = (active: boolean): L.PathOptions => ({
+  color: "#2563eb",
+  weight: active ? 3 : 2,
+  fillColor: "#3b82f6",
+  fillOpacity: active ? 0.3 : 0.12,
+});
+
+type CodedLayer = L.Path & { feature?: Feature };
+
+// Dibuja las zonas de los CP y encuadra: a todas, o a la del CP enfocado.
+// Imperativo (y no <GeoJSON>) para poder reencuadrar y resaltar al cambiar.
+function CpLayer({
+  geometry,
+  focusCode,
+}: {
+  geometry: GeoJsonObject | null;
+  focusCode?: string | null;
+}) {
   const map = useMap();
+  const layerRef = useRef<L.GeoJSON | null>(null);
+
   useEffect(() => {
     if (!geometry) return;
-    const layer = L.geoJSON(geometry, {
-      style: { color: "#2563eb", weight: 2, fillColor: "#3b82f6", fillOpacity: 0.12 },
-    }).addTo(map);
-    const bounds = layer.getBounds();
-    if (bounds.isValid()) {
-      // animate:false a propósito: si el mapa se desmonta justo después de
-      // encuadrar (p. ej. al quitar la última zona del repartidor), una
-      // animación de zoom viva ejecuta su callback sobre un mapa ya destruido
-      // y rompe con "Cannot read properties of undefined (reading '_leaflet_pos')".
-      map.fitBounds(bounds, { padding: [20, 20], animate: false });
-    }
+    const layer = L.geoJSON(geometry, { style: () => cpStyle(false) }).addTo(map);
+    layerRef.current = layer;
     return () => {
       map.removeLayer(layer);
+      layerRef.current = null;
     };
   }, [geometry, map]);
+
+  // Encuadra a la zona del CP enfocado (resaltándola) o a todas si no hay foco.
+  // animate:false a propósito: si el mapa se desmonta con una animación viva
+  // (p. ej. al quitar la última zona) rompe con "_leaflet_pos".
+  useEffect(() => {
+    const layer = layerRef.current;
+    if (!layer) return;
+    let target: CodedLayer | null = null;
+    layer.eachLayer((l) => {
+      const cl = l as CodedLayer;
+      const code = cl.feature?.properties?.code as string | undefined;
+      const active = !!focusCode && code === focusCode;
+      cl.setStyle(cpStyle(active));
+      if (active) target = cl;
+    });
+    const bounds = target ? (target as L.Polygon).getBounds() : layer.getBounds();
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: target ? [30, 30] : [20, 20], animate: false });
+    }
+  }, [focusCode, geometry, map]);
+
   return null;
 }
 
@@ -40,6 +72,7 @@ function CpLayer({ geometry }: { geometry: GeoJsonObject | null }) {
 // Siempre se usa a través de MapView para mantener la abstracción.
 export default function LeafletMap({
   geometry = null,
+  focusCode = null,
   center = [40.4168, -3.7038], // Centro de España (Madrid)
   zoom = 6,
 }: LeafletMapProps) {
@@ -49,7 +82,7 @@ export default function LeafletMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <CpLayer geometry={geometry} />
+      <CpLayer geometry={geometry} focusCode={focusCode} />
     </MapContainer>
   );
 }
