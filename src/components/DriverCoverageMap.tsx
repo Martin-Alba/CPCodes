@@ -9,10 +9,11 @@ interface CoverageCp {
   municipio: string | null;
   provincia: string | null;
   geometry: Geometry | null;
+  localities: string[];
 }
 
-// Muestra la zona de cobertura de un repartidor: el mapa con todas las zonas
-// de sus CP asignados + la lista de localidades que cubre.
+// Zona de cobertura de un repartidor: mapa con todas las zonas de sus CP +
+// las localidades que comprende cada CP (con el municipio como respaldo).
 export default function DriverCoverageMap({
   driverId,
   count,
@@ -48,12 +49,6 @@ export default function DriverCoverageMap({
 
   if (count === 0) return null;
 
-  const localities = cps
-    ? [
-        ...new Set(cps.map((c) => c.municipio).filter((m): m is string => Boolean(m))),
-      ].sort((a, b) => a.localeCompare(b, "es"))
-    : [];
-
   const features: Feature[] = (cps ?? [])
     .filter((c) => c.geometry)
     .map((c) => ({
@@ -71,23 +66,27 @@ export default function DriverCoverageMap({
       {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       {!cps && !error && <p className="mt-2 text-sm text-muted">Cargando cobertura…</p>}
 
-      {localities.length > 0 && (
-        <p className="mt-2 text-sm">
-          <span className="text-muted">Localidades ({localities.length}): </span>
-          {localities.join(", ")}
-        </p>
-      )}
-
       {featureCollection && (
         <div className="mt-3 h-[55vh] overflow-hidden rounded-lg border border-border">
           <MapView geometry={featureCollection} />
         </div>
       )}
 
-      {cps && cps.length > 0 && !featureCollection && localities.length === 0 && (
-        <p className="mt-2 text-sm text-muted">
-          Los CP asignados no tienen geometría ni municipio cargados.
-        </p>
+      {cps && cps.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs font-medium text-muted">Localidades por código postal</p>
+          <ul className="mt-1 max-h-72 space-y-2 overflow-auto pr-1 text-sm">
+            {cps.map((cp) => (
+              <li key={cp.code}>
+                <span className="font-medium">{cp.code}</span>
+                {cp.municipio && <span className="text-muted"> · {cp.municipio}</span>}
+                {cp.localities.length > 0 && (
+                  <div className="text-xs text-muted">{cp.localities.join(", ")}</div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

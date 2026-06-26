@@ -50,6 +50,19 @@ export const postalCodes = pgTable(
   (t) => [index("postal_codes_provincia_idx").on(t.provincia)],
 );
 
+/** Localidades (núcleos de población) que comprende cada CP — relación 1:N. */
+export const postalCodeLocalities = pgTable(
+  "postal_code_localities",
+  {
+    postalCode: varchar("postal_code", { length: 5 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postalCode, t.name] }),
+    index("pcl_postal_code_idx").on(t.postalCode),
+  ],
+);
+
 /** Repartidores. */
 export const drivers = pgTable(
   "drivers",
