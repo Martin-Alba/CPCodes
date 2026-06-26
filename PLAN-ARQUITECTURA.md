@@ -16,6 +16,7 @@ Fases 0 y 1 completas, en producción en Vercel. Resumen de lo construido y de l
 - **Datos:** geometrías de CP del **CNIG** + nombres de municipio del **INE** (codeforspain). ~10.900 CP y ~8.100 municipios cargados. *No* se aplicó simplificación de polígonos (caben holgados; queda como optimización futura).
 - **Funciones (Fase 1):** búsqueda de CP por **CP / municipio / provincia** (mapa con polígono + listado paginado bidireccional), **repartidores** (CRUD + asignación N:M de CP) y **usuarios** de solo lectura. Mutaciones con **Server Actions** (admin-only, fail-closed, idempotentes).
 - **Pendientes:** restaurar hash del admin (§7) · rutas diarias (Fase 2) · rotar credenciales expuestas.
+- **Mejora futura — localidades detalladas por CP (núcleos):** hoy la cobertura usa *un municipio por CP* (INE). Existe fuente más detallada por provincia en ficheros `NNxcodpos.txt` (formato `CP:LOCALIDAD`, una localidad por línea, varias por CP; p. ej. Asturias = `33xcodpos.txt`, 384 CP / 6.347 localidades). Plan para implementarlo: tabla `postal_code_localities` (CP → localidad, 1:N) + ETL que cargue esos ficheros (igual que el de municipios) + la sección "Zona de cobertura" lista las localidades reales por CP, con *fallback* al municipio del INE donde no haya datos. Evaluado y validado (junio 2026); **no cargado** aún. Empezar por Asturias y ampliar provincia a provincia con el mismo formato.
 
 ---
 
